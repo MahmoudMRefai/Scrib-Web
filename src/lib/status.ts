@@ -1,4 +1,4 @@
-import type { ParcelStatus, SettlementStatus } from '../api/types';
+import type { ParcelStatus, PayoutStatus, SettlementStatus } from '../api/types';
 
 export type Tone = 'gold' | 'teal' | 'violet' | 'sky' | 'rose' | 'green' | 'orange' | 'slate';
 
@@ -37,6 +37,13 @@ export const SETTLEMENT_META: Record<SettlementStatus, { label: string; tone: To
   PENDING: { label: 'Awaiting cash', tone: 'gold' },
   CONFIRMED: { label: 'Confirmed', tone: 'green' },
   DISPUTED: { label: 'Disputed', tone: 'rose' },
+};
+
+export const PAYOUT_META: Record<PayoutStatus, { label: string; tone: Tone }> = {
+  PENDING: { label: 'Requested', tone: 'gold' },
+  DISBURSED: { label: 'Awaiting confirmation', tone: 'sky' },
+  CONFIRMED: { label: 'Confirmed', tone: 'green' },
+  REJECTED: { label: 'Rejected', tone: 'rose' },
 };
 
 export const isTerminal = (s: ParcelStatus) => NEXT_STATUS[s].length === 0;

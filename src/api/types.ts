@@ -17,6 +17,8 @@ export type ParcelStatus =
   | 'RETURNED_TO_ORIGIN';
 
 export type SettlementStatus = 'PENDING' | 'CONFIRMED' | 'DISPUTED';
+export type PayoutStatus = 'PENDING' | 'DISBURSED' | 'CONFIRMED' | 'REJECTED';
+export type PayoutRecipientType = 'COURIER' | 'MERCHANT';
 export type AccountOwnerType = 'COURIER' | 'MERCHANT' | 'SYSTEM';
 export type AccountType = 'ASSET' | 'LIABILITY' | 'REVENUE' | 'EXPENSE';
 export type VehicleType = 'MOTORCYCLE' | 'CAR' | 'BIKE' | 'VAN' | 'OTHER';
@@ -58,6 +60,7 @@ export interface Parcel {
   recipientAddress: string;
   notes: string | null;
   deliveredAt: string | null;
+  courierCommission?: DecimalString | null;
   createdAt: string;
   updatedAt: string;
   /** Present on list responses only */
@@ -140,6 +143,60 @@ export interface Settlement {
   admin?: { id: string; name: string } | null;
 }
 
+export interface CourierWalletTransaction {
+  id: string;
+  type: 'OPENING_BALANCE' | 'CASH_COLLECTED' | 'CASH_DEPOSITED' | 'COMMISSION_EARNED' | 'PAYOUT_SETTLED';
+  amount: DecimalString;
+  balanceAfter: DecimalString;
+  referenceId: string | null;
+  createdAt: string;
+}
+
+export interface CourierWalletSummary {
+  walletId: string | null;
+  totalEarnings: DecimalString;
+  pendingPayout: DecimalString;
+  cashInHand: DecimalString;
+  updatedAt: string | null;
+  transactions: CourierWalletTransaction[];
+}
+
 export interface SettlementList extends Paginated {
   settlements: Settlement[];
+}
+
+export interface Payout {
+  id: string;
+  recipientId: string;
+  recipientType: PayoutRecipientType;
+  adminId: string | null;
+  amount: DecimalString;
+  status: PayoutStatus;
+  notes: string | null;
+  disbursedAt: string | null;
+  confirmedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  recipient?: { id: string; name: string; email: string; phone?: string | null; role: Role };
+  admin?: { id: string; name: string } | null;
+}
+
+export interface PayoutList extends Paginated {
+  payouts: Payout[];
+}
+
+export interface RecipientPayoutBalance {
+  userId: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  recipientType: PayoutRecipientType;
+  totalBalance: DecimalString;
+  pendingPayouts: DecimalString;
+  availableBalance: DecimalString;
+}
+
+export interface RecipientBalancesResponse {
+  couriers: RecipientPayoutBalance[];
+  merchants: RecipientPayoutBalance[];
 }

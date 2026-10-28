@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Banknote, CheckCircle2, MapPin, Phone, Route, Store, StickyNote, Truck, Warehouse } from 'lucide-react';
-import { useAsync, useMyWallet, useStatusCounts } from '../../hooks/useAsync';
+import { Banknote, CheckCircle2, Coins, MapPin, Phone, Route, Store, StickyNote, Truck } from 'lucide-react';
+import { useAsync, useCourierWallet, useMyWallet, useStatusCounts } from '../../hooks/useAsync';
 import { Api } from '../../api/endpoints';
 import type { Parcel, ParcelStatus } from '../../api/types';
 import { useSession } from '../../auth/AuthContext';
@@ -43,6 +43,7 @@ export function CourierDeliveries({ onNavigate }: { onNavigate: (t: CourierTab) 
   const scope = { courierId: user.id };
   const stats = useStatusCounts(scope);
   const wallet = useMyWallet();
+  const courierWallet = useCourierWallet();
   const list = useAsync(
     () =>
       filter === 'ACTIVE'
@@ -72,6 +73,7 @@ export function CourierDeliveries({ onNavigate }: { onNavigate: (t: CourierTab) 
     list.reload();
     stats.reload();
     wallet.reload();
+    courierWallet.reload();
   };
 
   const advance = async (parcel: Parcel, target: ParcelStatus) => {
@@ -102,11 +104,25 @@ export function CourierDeliveries({ onNavigate }: { onNavigate: (t: CourierTab) 
 
       <div className="stats">
         <StatCard
+          label="Commission owed to you"
+          value={courierWallet.data ? money(courierWallet.data.pendingPayout) : '—'}
+          icon={Coins}
+          tone="green"
+          loading={courierWallet.loading && courierWallet.data === undefined}
+          hint={courierWallet.data ? `Total earned: ${money(courierWallet.data.totalEarnings)}` : undefined}
+        />
+        <StatCard
           label="Cash on hand"
-          value={wallet.data === null ? '—' : money(wallet.data?.balance)}
+          value={
+            courierWallet.data?.cashInHand !== undefined
+              ? money(courierWallet.data.cashInHand)
+              : wallet.data === null
+              ? '—'
+              : money(wallet.data?.balance)
+          }
           icon={Banknote}
           tone="teal"
-          loading={wallet.loading && wallet.data === undefined}
+          loading={wallet.loading && wallet.data === undefined && courierWallet.data === undefined}
           hint={
             <button className="btn btn-ghost btn-sm" style={{ padding: 0, height: 'auto', color: 'var(--teal)' }} onClick={() => onNavigate('wallet')}>
               Settle with hub →
@@ -114,7 +130,6 @@ export function CourierDeliveries({ onNavigate }: { onNavigate: (t: CourierTab) 
           }
         />
         <StatCard label="Out for delivery" value={count(c?.OUT_FOR_DELIVERY ?? 0)} icon={Truck} tone="gold" loading={loadingStats} />
-        <StatCard label="To route via hub" value={count((c?.PICKED_UP ?? 0) + (c?.AT_HUB ?? 0))} icon={Warehouse} tone="sky" loading={loadingStats} hint="Picked up · at hub" />
         <StatCard label="Delivered" value={count(c?.DELIVERED ?? 0)} icon={CheckCircle2} tone="green" loading={loadingStats} hint={c ? `${count(c.FAILED)} need a retry` : undefined} />
       </div>
 
@@ -175,15 +190,24 @@ function ParcelCard({ parcel, busy, onAdvance }: { parcel: Parcel; busy: boolean
         ))}
       </div>
 
-      <div className="row" style={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+      <div className="row" style={{ alignItems: 'baseline', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
         <div>
           <div className="cell-sub">Collect on delivery</div>
           <div className="cod">{money(parcel.codAmount)}</div>
         </div>
-        {parcel.merchant && (
-          <span className="tag" title="Merchant"><Store size={11} style={{ marginRight: 4 }} />{parcel.merchant.businessName}</span>
-        )}
+        <div style={{ textAlign: 'right' }}>
+          <div className="cell-sub">Your commission</div>
+          <div style={{ color: 'var(--green)', fontWeight: 600, fontSize: '0.95rem' }}>
+            {parcel.courierCommission ? `+${money(parcel.courierCommission)}` : '—'}
+          </div>
+        </div>
       </div>
+
+      {parcel.merchant && (
+        <div style={{ marginTop: '2px' }}>
+          <span className="tag" title="Merchant"><Store size={11} style={{ marginRight: 4 }} />{parcel.merchant.businessName}</span>
+        </div>
+      )}
 
       <div className="kv">
         <div className="kv-row">

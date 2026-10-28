@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Feather, LogOut, type LucideIcon } from 'lucide-react';
 import { useAuth, useSession } from '../auth/AuthContext';
 import { initials } from '../lib/format';
@@ -41,31 +41,51 @@ export function Shell<K extends string>({
   const { logout } = useAuth();
   const role = ROLE[user.role];
 
+  useEffect(() => {
+    const activeItem = nav.find((item) => item.key === active);
+    document.title = activeItem ? `Scribe — ${activeItem.label}` : 'Scribe — Smart Logistics Hub';
+  }, [active, nav]);
+
   return (
     <div className="shell">
       <aside className="sidebar">
-        <div className="brand">
+        <a
+          href={`/${nav[0]?.key ?? 'overview'}`}
+          className="brand"
+          style={{ textDecoration: 'none', color: 'inherit' }}
+          onClick={(e) => {
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+            e.preventDefault();
+            if (nav[0]) onNavigate(nav[0].key);
+          }}
+        >
           <Logo />
           <div>
             <div className="brand-name">Scribe</div>
             <div className="brand-sub">Armant Hub</div>
           </div>
-        </div>
+        </a>
         <div className="nav-label">{role.label} workspace</div>
         <nav className="nav" aria-label="Main">
           {nav.map((item) => (
-            <button
+            <a
               key={item.key}
               id={`nav-${item.key}`}
+              href={`/${item.key}`}
+              style={{ textDecoration: 'none' }}
               className={`nav-item ${active === item.key ? 'active' : ''}`}
-              onClick={() => onNavigate(item.key)}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                onNavigate(item.key);
+              }}
               title={item.label}
               aria-current={active === item.key ? 'page' : undefined}
             >
               <item.icon size={18} />
               <span className="nav-text">{item.label}</span>
               {item.badge ? <span className="nav-badge">{item.badge}</span> : null}
-            </button>
+            </a>
           ))}
         </nav>
         <div className="user-card">

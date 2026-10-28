@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { AlertTriangle, ChevronLeft, ChevronRight, Inbox, RefreshCw, type LucideIcon } from 'lucide-react';
-import type { ParcelStatus, SettlementStatus } from '../api/types';
-import { SETTLEMENT_META, STATUS_META, type Tone } from '../lib/status';
+import type { ParcelStatus, PayoutStatus, SettlementStatus } from '../api/types';
+import { PAYOUT_META, SETTLEMENT_META, STATUS_META, type Tone } from '../lib/status';
 import { count } from '../lib/format';
 
 export function Spinner({ size = 16 }: { size?: number }) {
@@ -181,6 +181,11 @@ export function StatusPill({ status }: { status: ParcelStatus }) {
 
 export function SettlementPill({ status }: { status: SettlementStatus }) {
   const meta = SETTLEMENT_META[status];
+  return <Pill tone={meta.tone}>{meta.label}</Pill>;
+}
+
+export function PayoutPill({ status }: { status: PayoutStatus }) {
+  const meta = PAYOUT_META[status];
   return <Pill tone={meta.tone}>{meta.label}</Pill>;
 }
 

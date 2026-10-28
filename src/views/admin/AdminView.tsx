@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { Bike, HandCoins, LayoutDashboard, Package, Store, Wallet } from 'lucide-react';
 import { Shell, type NavItem } from '../../components/Shell';
 import { useAsync } from '../../hooks/useAsync';
+import { useRouteTab } from '../../hooks/useRouteTab';
 import { Api } from '../../api/endpoints';
 import { AdminOverview } from './AdminOverview';
 import { AdminParcels } from './AdminParcels';
@@ -11,9 +11,11 @@ import { AdminMerchants } from './AdminMerchants';
 import { AdminWallets } from './AdminWallets';
 
 export type AdminTab = 'overview' | 'parcels' | 'settlements' | 'couriers' | 'merchants' | 'wallets';
+const ADMIN_TABS: readonly AdminTab[] = ['overview', 'parcels', 'settlements', 'couriers', 'merchants', 'wallets'];
+const ADMIN_ALIASES: Record<string, AdminTab> = { payouts: 'settlements' };
 
 export function AdminView() {
-  const [tab, setTab] = useState<AdminTab>('overview');
+  const [tab, setTab] = useRouteTab(ADMIN_TABS, 'overview', ADMIN_ALIASES);
   // Drives the sidebar badge; refreshed whenever a settlement changes.
   const pending = useAsync(() => Api.settlements.list({ status: 'PENDING', pageSize: 1 }), []);
 

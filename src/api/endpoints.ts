@@ -2,6 +2,7 @@ import { request } from './client';
 import type {
   AuthResult,
   CourierList,
+  CourierWalletSummary,
   CreateParcelInput,
   LedgerAccount,
   Merchant,
@@ -12,6 +13,11 @@ import type {
   Settlement,
   SettlementList,
   SettlementStatus,
+  Payout,
+  PayoutList,
+  PayoutStatus,
+  PayoutRecipientType,
+  RecipientBalancesResponse,
   AccountOwnerType,
 } from './types';
 
@@ -26,6 +32,14 @@ export interface ParcelQuery {
 export interface SettlementQuery {
   status?: SettlementStatus;
   courierId?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface PayoutQuery {
+  status?: PayoutStatus;
+  recipientId?: string;
+  recipientType?: PayoutRecipientType;
   page?: number;
   pageSize?: number;
 }
@@ -50,6 +64,7 @@ export const Api = {
 
   couriers: {
     list: (page = 1, pageSize = 20) => request<CourierList>('/couriers', { query: { page, pageSize } }),
+    myWallet: (limit = 20) => request<CourierWalletSummary>('/couriers/me/wallet', { query: { limit } }),
   },
 
   merchants: {
@@ -74,5 +89,21 @@ export const Api = {
       request<Settlement>(`/settlements/${id}/confirm`, { method: 'PATCH', body: { notes: notes || undefined } }),
     dispute: (id: string, reason: string) =>
       request<Settlement>(`/settlements/${id}/dispute`, { method: 'PATCH', body: { reason } }),
+  },
+
+  payouts: {
+    list: (query: PayoutQuery = {}) => request<PayoutList>('/payouts', { query: { ...query } }),
+    request: (body: { amount: number; notes?: string }) =>
+      request<Payout>('/payouts', { method: 'POST', body }),
+    sendDirect: (body: { recipientId: string; amount: number; notes?: string }) =>
+      request<Payout>('/payouts/send', { method: 'POST', body }),
+    balances: () =>
+      request<RecipientBalancesResponse>('/payouts/balances'),
+    disburse: (id: string, notes?: string) =>
+      request<Payout>(`/payouts/${id}/disburse`, { method: 'PATCH', body: { notes: notes || undefined } }),
+    confirm: (id: string) =>
+      request<Payout>(`/payouts/${id}/confirm`, { method: 'PATCH', body: {} }),
+    reject: (id: string, reason?: string) =>
+      request<Payout>(`/payouts/${id}/reject`, { method: 'PATCH', body: { reason } }),
   },
 };

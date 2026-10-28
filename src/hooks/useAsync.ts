@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type DependencyList } from 'react';
 import { Api, type ParcelQuery } from '../api/endpoints';
 import { ApiError } from '../api/client';
-import type { LedgerAccount, ParcelStatus } from '../api/types';
+import type { CourierWalletSummary, LedgerAccount, ParcelStatus } from '../api/types';
 import { PARCEL_STATUSES } from '../lib/status';
 import { errorMessage } from '../lib/format';
 
@@ -84,4 +84,20 @@ export function useMyWallet(deps: DependencyList = []) {
       throw e;
     }
   }, deps);
+}
+
+/**
+ * For Couriers: retrieves the courier's dedicated wallet summary (/couriers/me/wallet),
+ * which includes totalEarnings (lifetime commission), pendingPayout (unpaid commission),
+ * and cashInHand (collected COD owed to hub).
+ */
+export function useCourierWallet(limit = 20, deps: DependencyList = []) {
+  return useAsync<CourierWalletSummary | null>(async () => {
+    try {
+      return await Api.couriers.myWallet(limit);
+    } catch (e) {
+      if (e instanceof ApiError && e.code === 'NOT_FOUND') return null;
+      throw e;
+    }
+  }, [limit, ...deps]);
 }
